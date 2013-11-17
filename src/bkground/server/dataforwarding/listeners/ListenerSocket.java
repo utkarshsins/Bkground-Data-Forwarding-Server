@@ -1,4 +1,4 @@
-package bkground.server.terminal.listeners;
+package bkground.server.dataforwarding.listeners;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -14,7 +14,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import bkground.server.terminal.ServerInfo;
+import bkground.server.dataforwarding.ServerInfo;
 
 public class ListenerSocket extends Thread {
 
@@ -256,10 +256,43 @@ public class ListenerSocket extends Thread {
 				enqueSocketRemoval(key);
 
 			}
-
 			return true;
 		}
-
+	}
+	
+	
+	/*
+	 * Class for each task that is needed to be processed by the data proessing threads.
+	 */
+	private class DataProcessingTask {
+		public String xmlData;
+		public DataProcessingTask(String s) {
+			xmlData = s;
+		}
+	}
+	
+	/*
+	 * Class for registering the task to the data processing thread pool
+	 */
+	private class RegisterDataProcessingTask implements Callable<Boolean> {
+		DataProcessingTask task;
+		public RegisterDataProcessingTask(DataProcessingTask t) {
+			task = t;
+		}
+		
+		/*
+		 * We need to do the process each of the submitted task in this thread.
+		 * Processing involved doing the database query to know the users 
+		 * correspoding to this subscription.
+		 */
+		
+		@Override
+		public Boolean call() throws Exception {
+			String data = task.xmlData;
+			
+			
+			return null;
+		}
 	}
 
 }

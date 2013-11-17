@@ -1,10 +1,10 @@
-package bkground.server.terminal.listeners;
+package bkground.server.dataforwarding.listeners;
 
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import bkground.server.terminal.Defaults;
-import bkground.server.terminal.ServerInfo;
+import bkground.server.dataforwarding.Defaults;
+import bkground.server.dataforwarding.ServerInfo;
 
 public class ListenerAdministrator extends Thread {
 	private static final String THREAD_NAME = "THREAD_ADMIN";

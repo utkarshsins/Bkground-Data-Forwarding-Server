@@ -1,1 +1,13 @@
-Read - fucking - me
+XML specification.
+
+XML will be of following form:
+
+<?xml version="1.0"?>
+<bkgroud>
+    <subscriptionId></subscriptionId>
+    <from>Publisher name Jani</from>
+    <body>Bloody message </body>
+</bkgroud>
+
+
+Each tag is self explainatory.

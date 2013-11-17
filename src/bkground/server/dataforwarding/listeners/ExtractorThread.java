@@ -1,4 +1,4 @@
-package bkground.server.terminal.listeners;
+package bkground.server.dataforwarding.listeners;
 
 import java.nio.ByteBuffer;
 
@@ -12,6 +12,11 @@ public class ExtractorThread extends Thread {
 
 		buffer = ByteBuffer.allocate(1024);
 
+	}
+	
+	public void processXML() {
+		
+		
 	}
 
 }

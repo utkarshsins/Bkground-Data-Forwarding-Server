@@ -1,4 +1,4 @@
-package bkground.server.terminal;
+package bkground.server.dataforwarding;
 
 import java.io.IOException;
 import java.nio.channels.SocketChannel;
@@ -6,9 +6,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import bkground.server.terminal.listeners.ExtractorThreadFactory;
-import bkground.server.terminal.listeners.ListenerServer;
-import bkground.server.terminal.listeners.ListenerSocket;
+import bkground.server.dataforwarding.listeners.DataProcessingThreadFactory;
+import bkground.server.dataforwarding.listeners.ExtractorThreadFactory;
+import bkground.server.dataforwarding.listeners.ListenerServer;
+import bkground.server.dataforwarding.listeners.ListenerSocket;
 
 public class ServerInfo {
 
@@ -21,6 +22,8 @@ public class ServerInfo {
 	public ListenerServer listenerServer;
 
 	public ExecutorService socketProcessorPool;
+	
+	public ExecutorService dataProcessingPool;
 
 	public ServerInfo() {
 		this.listenerSocketMap = new ConcurrentHashMap<Integer, ListenerSocket>();
@@ -29,6 +32,10 @@ public class ServerInfo {
 		this.socketProcessorPool = Executors.newFixedThreadPool(
 				Defaults.getDefaultProcessorThreadCount(),
 				new ExtractorThreadFactory());
+		// 
+		this.dataProcessingPool = Executors.newFixedThreadPool(
+				Defaults.getDefaultDataProcessingThreadCount(), 
+				new DataProcessingThreadFactory());
 	}
 
 	public void init() throws IOException {

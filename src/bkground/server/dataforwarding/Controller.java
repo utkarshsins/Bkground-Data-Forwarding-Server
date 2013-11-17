@@ -1,9 +1,10 @@
-package bkground.server.terminal;
-
+package bkground.server.dataforwarding;
 import java.io.IOException;
 import java.util.Scanner;
 
-import bkground.server.terminal.listeners.ListenerAdministrator;
+import bkground.server.dataforwarding.Defaults;
+import bkground.server.dataforwarding.ServerInfo;
+import bkground.server.dataforwarding.listeners.ListenerAdministrator;
 
 /**
  * The main controller subsystem of the TerminalServer.

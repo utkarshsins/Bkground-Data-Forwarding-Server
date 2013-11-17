@@ -1,4 +1,4 @@
-package bkground.server.terminal;
+package bkground.server.dataforwarding;
 
 public class Defaults {
 
@@ -6,6 +6,11 @@ public class Defaults {
 			+ "Terminal Server\n" + "#####################################";
 
 	public static int getDefaultListenerThreadCount() {
+		return 1;
+		// return Runtime.getRuntime().availableProcessors();
+	}
+
+	public static int getDefaultDataProcessingThreadCount() {
 		return 1;
 		// return Runtime.getRuntime().availableProcessors();
 	}

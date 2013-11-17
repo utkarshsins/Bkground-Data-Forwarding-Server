@@ -1,4 +1,4 @@
-package bkground.server.terminal.listeners;
+package bkground.server.dataforwarding.listeners;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -7,7 +7,7 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ConcurrentHashMap;
 
-import bkground.server.terminal.ServerInfo;
+import bkground.server.dataforwarding.ServerInfo;
 
 /**
  * Thread that will listen for incoming connections
@@ -77,9 +77,9 @@ public class ListenerServer extends Thread {
 		ssc = ServerSocketChannel.open();
 		ssc.configureBlocking(true);
 		ssc.socket().bind(new InetSocketAddress(port));
-
+		
 		System.out.println("Server started on port " + port);
-
+		
 		super.start();
 	}
 
