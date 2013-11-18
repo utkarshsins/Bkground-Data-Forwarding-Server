@@ -2,6 +2,8 @@ package bkground.server.dataforwarding.listeners;
 
 import java.nio.ByteBuffer;
 
+import bkground.server.dataforwarding.listeners.ListenerSocket.DataProcessingTask;
+
 public class ExtractorThread extends Thread {
 
 	public ByteBuffer buffer;
@@ -14,8 +16,7 @@ public class ExtractorThread extends Thread {
 
 	}
 	
-	public void processXML() {
-		
+	public void processXML(DataProcessingTask task) {		
 		
 	}
 

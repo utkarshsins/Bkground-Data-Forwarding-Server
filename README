@@ -4,7 +4,7 @@ XML will be of following form:
 
 <?xml version="1.0"?>
 <bkgroud>
-    <subscriptionId></subscriptionId>
+    <subscriptionID>1</subscriptionID>
     <from>Publisher name Jani</from>
     <body>Bloody message </body>
 </bkgroud>

@@ -248,6 +248,21 @@ public class ListenerSocket extends Thread {
 			}
 			System.out.println();
 
+			// ------------------------------------------------------------------------------------------------
+			// TODO By this point, the xml data should have been completely 
+			// inserted in the threadbuffer.
+			
+			// Add the test to the data processing pool.
+			// String xmlData = thread.buffer.toString();
+			String xmlData = "<?xml version=\"1.0\"?><bkgroud><subscriptionID>1</subscriptionID><from>Publisher name Jani</from><body>Bloody message </body></bkgroud>";
+	
+			System.out.println("Adding task for " + xmlData);
+			DataProcessingTask task = new DataProcessingTask(xmlData);
+			
+			// Adding the data to the thread pool.
+			serverInfo.dataProcessingPool.submit(new RegisterDataProcessingTask(task));
+			System.out.println("Task added \n");
+
 			if (bytesRead == -1) {
 
 				System.out.println("Socket closed. EOS. "
@@ -264,7 +279,7 @@ public class ListenerSocket extends Thread {
 	/*
 	 * Class for each task that is needed to be processed by the data proessing threads.
 	 */
-	private class DataProcessingTask {
+	public class DataProcessingTask {
 		public String xmlData;
 		public DataProcessingTask(String s) {
 			xmlData = s;
@@ -274,23 +289,47 @@ public class ListenerSocket extends Thread {
 	/*
 	 * Class for registering the task to the data processing thread pool
 	 */
-	private class RegisterDataProcessingTask implements Callable<Boolean> {
+	public class RegisterDataProcessingTask implements Callable<Boolean> {
 		DataProcessingTask task;
+		public static final String SUBSCRIPTIONID_STRING = "<subscriptionID>";
+		public static final String SUBSCRIPTIONID_STRING_END = "</subscriptionID>";
 		public RegisterDataProcessingTask(DataProcessingTask t) {
-			task = t;
+			this.task = t;
 		}
-		
 		/*
 		 * We need to do the process each of the submitted task in this thread.
 		 * Processing involved doing the database query to know the users 
 		 * correspoding to this subscription.
-		 */
-		
+		 */		
 		@Override
 		public Boolean call() throws Exception {
-			String data = task.xmlData;
+			String data = this.task.xmlData;
+
+			// Get the subscription ID from the xmlData String.
+			int subscriptionID = -1;
+			subscriptionID = Integer.parseInt(data.substring(
+					data.indexOf(SUBSCRIPTIONID_STRING) + SUBSCRIPTIONID_STRING.length(), 
+				 	data.indexOf(SUBSCRIPTIONID_STRING_END)));
+			System.out.println("subscriptionID: " + subscriptionID);
 			
+			if (subscriptionID == -1) {
+				System.err.println("Defected xml stanza returned \n" + data + "\n");
+				return null;
+			}
 			
+			DataProcessingThread thread = (DataProcessingThread) Thread.currentThread();
+			
+			// Set task
+			thread.setTask(task);
+			
+			// Do the database query for this subscriptionID
+			List<Integer> Users = thread.findUsersForTopic(subscriptionID);
+			
+			// Now we have the users, who are subscribed to this topic.
+			// We now want to send this informaiton along with the xml data to the 
+			// Terminal servers.
+			
+			System.out.println("Implement the sending method \n");
 			return null;
 		}
 	}
