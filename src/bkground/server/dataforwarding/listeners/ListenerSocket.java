@@ -291,8 +291,6 @@ public class ListenerSocket extends Thread {
 	 */
 	public class RegisterDataProcessingTask implements Callable<Boolean> {
 		DataProcessingTask task;
-		public static final String SUBSCRIPTIONID_STRING = "<subscriptionID>";
-		public static final String SUBSCRIPTIONID_STRING_END = "</subscriptionID>";
 		public RegisterDataProcessingTask(DataProcessingTask t) {
 			this.task = t;
 		}
@@ -303,33 +301,11 @@ public class ListenerSocket extends Thread {
 		 */		
 		@Override
 		public Boolean call() throws Exception {
-			String data = this.task.xmlData;
-
-			// Get the subscription ID from the xmlData String.
-			int subscriptionID = -1;
-			subscriptionID = Integer.parseInt(data.substring(
-					data.indexOf(SUBSCRIPTIONID_STRING) + SUBSCRIPTIONID_STRING.length(), 
-				 	data.indexOf(SUBSCRIPTIONID_STRING_END)));
-			System.out.println("subscriptionID: " + subscriptionID);
-			
-			if (subscriptionID == -1) {
-				System.err.println("Defected xml stanza returned \n" + data + "\n");
-				return null;
-			}
-			
-			DataProcessingThread thread = (DataProcessingThread) Thread.currentThread();
-			
+			DataProcessingThread thread = (DataProcessingThread) Thread.currentThread();			
 			// Set task
 			thread.setTask(task);
-			
-			// Do the database query for this subscriptionID
-			List<Integer> Users = thread.findUsersForTopic(subscriptionID);
-			
-			// Now we have the users, who are subscribed to this topic.
-			// We now want to send this informaiton along with the xml data to the 
-			// Terminal servers.
-			
-			System.out.println("Implement the sending method \n");
+			// Lets start the work
+			thread.ExtractAndSend();
 			return null;
 		}
 	}

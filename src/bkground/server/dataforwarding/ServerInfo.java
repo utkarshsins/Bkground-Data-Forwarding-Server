@@ -13,7 +13,7 @@ import bkground.server.dataforwarding.listeners.ListenerSocket;
 
 public class ServerInfo {
 
-	public static final int SERVER_INFO_DEFAULT_PORT = 4040;
+	public static final int SERVER_INFO_DEFAULT_PORT = 4041;
 
 	public ConcurrentHashMap<Integer, ListenerSocket> listenerSocketMap;
 	
