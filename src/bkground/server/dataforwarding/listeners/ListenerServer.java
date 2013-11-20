@@ -106,7 +106,6 @@ public class ListenerServer extends Thread {
 
 				System.out.println("Incoming socket from "
 						+ socketChannel.getRemoteAddress());
-
 				if (listenerSockets.values().size() != 0) {
 
 					listenerIterator = (++listenerIterator)

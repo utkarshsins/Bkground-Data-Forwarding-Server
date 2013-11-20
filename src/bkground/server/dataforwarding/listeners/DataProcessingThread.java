@@ -1,9 +1,15 @@
 package bkground.server.dataforwarding.listeners;
 
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
+import java.nio.channels.SocketChannel;
 import java.util.List;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentHashMap;
 
-import bkground.server.dataforwarding.listeners.ListenerSocket.DataProcessingTask;
+import bkground.server.dataforwarding.DataProcessTask.DataProcessTaskEntry;
+import bkground.server.dataforwarding.ServerInfo;
 
 public class DataProcessingThread extends Thread {
 	
@@ -14,20 +20,29 @@ public class DataProcessingThread extends Thread {
 	 * 
 	 * 
 	 */	
-	public String xmlData;
-	
-	private static final String SUBSCRIPTIONID_STRING = "<subscriptionID>";
-	private static final String SUBSCRIPTIONID_STRING_END = "</subscriptionID>";
+	public String msg;
+	public String subsID;
+	private String parentXML;
+	ConcurrentHashMap<Integer, Integer> UserTerminalMap;
+	ConcurrentHashMap<Integer, String> terminalReplyMap;
+	List<Integer> TerminalID;
 	private int subscriptionID;
-	
+	private ServerInfo serverInfo;
 	public DataProcessingThread (Runnable arg0) {
 		super(arg0);
-		xmlData = "Sample";
-		System.out.println("DataProcessing .. " + xmlData);		
+		
+		terminalReplyMap = new ConcurrentHashMap<>();
+		UserTerminalMap = new ConcurrentHashMap<Integer, Integer>();
+		TerminalID = new Vector<Integer>();
 	}
 	
-	public void setTask(DataProcessingTask t) {
-		xmlData = t.xmlData;
+	public void setTask(DataProcessTaskEntry t) {
+		this.msg = t.msg;
+		this.subsID = t.subsID; 
+		this.serverInfo = t.serverInfo;
+		this.parentXML = "<bkground><message><subscriptionid>" + this.subsID + 
+				"/subscriptionid><messagebody>" + this.msg 
+				+ "/messagebody></message></bkground>";
 	}
 
 	public void ExtractAndSend() {
@@ -39,6 +54,7 @@ public class DataProcessingThread extends Thread {
 		}
 		
 		// Get users corresponding to this topic
+		// TODO handle NULL exception.
 		List <Integer> Users = findUsersForTopic();
 		
 		// Now we have the users, who are subscribed to this topic.
@@ -51,14 +67,120 @@ public class DataProcessingThread extends Thread {
 		
 		System.out.println();
 		
-		// Now we need to append the userIDs to the xml Stanza.
-		String newXMLData = appendUsersList(Users);
+
+		// Now we need to know which user is connected to which terminal server.
+		fillUserTerminalMap(Users);
 		
-		System.out.println("\n\n" + newXMLData + "\n\n");
-		System.out.println("Implement the sending method \n");
+		System.out.println("Terminal IDs");
+		for (Integer i : TerminalID) 
+			System.out.print(i+ " ");
+		
+		
+		fillTerminalReplyMap(Users);
+		System.out.println("Replies are");
+		for (Integer i : TerminalID)
+			System.out.println(i + " " + terminalReplyMap.get(i));
+
+		sendAllTheReplies();
+		System.out.println("Implement database connections");
+	}
+	
+	/* 
+	 * Send the message to all the terminal servers. 
+	 * 
+	 */
+	private void sendAllTheReplies() {
+		System.out.println("Sending all the replies ");
+		for(Integer i: TerminalID) {
+			String toSend = terminalReplyMap.get(i);
+			if (toSend.isEmpty()) {
+				System.out.println("Nothing to send, shouldn't happen. " + i);
+				continue;
+			}
+			
+			/* Get the socketChannel from the serverInfo */
+			SocketChannel sc = null;
+			InetSocketAddress remoteAddress = 
+					(InetSocketAddress) this.serverInfo.socketAddMap.get(i);
+			if (remoteAddress == null) {
+				System.out.println("Terminal Server " 
+						+ i + " is not present at the moment, skipping");
+				continue;
+			}
+			ByteBuffer buffer = ByteBuffer.wrap(toSend.getBytes());
+			try {
+				System.out.println("opening socketChannel to " + remoteAddress.toString());
+				sc = SocketChannel.open();
+	            sc.configureBlocking(false);
+	            sc.connect(remoteAddress);
+	            while (!sc.finishConnect()) {
+	                // pretend to do something useful here
+	                System.out.println("Connecting ...");
+	                try {
+	                    Thread.sleep(3000);
+	                } catch (InterruptedException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	            sc.write(buffer);
+			} catch (IOException e1) {
+				System.out.println("Problem while sending message to terminal server");
+				e1.printStackTrace();
+			}
+		}
+		
+	}
+
+	/*
+	 * This method maps the terminalID to the reply that is needed 
+	 * to be sent to that terminal.
+	 */
+	private void fillTerminalReplyMap(List<Integer> userList) {
+		String toAdd = null;
+		for (Integer i : userList) {
+			if (terminalReplyMap.containsKey((UserTerminalMap.get(i)))) {
+				toAdd = terminalReplyMap.get(UserTerminalMap.get(i)) + "<recipient>" + i +"</recipient>";	
+				terminalReplyMap.put(UserTerminalMap.get(i),toAdd);
+				toAdd = null;
+			}
+			else
+				terminalReplyMap.put(UserTerminalMap.get(i),"<recipient>" + i +"</recipient>");				
+		}
+		
+		toAdd = null;
+		for (Integer i : TerminalID) {
+			if (!terminalReplyMap.containsKey(i)) {
+				System.out.println("Terminal ID and replies not consistent " + i);
+				return ;
+			}
+			toAdd = appendUsersList(i);
+			terminalReplyMap.replace(i, toAdd);
+		}
+	}
+
+	/*
+	 * Map the user with the terminalID to which they are connected.
+	 */
+	private void fillUserTerminalMap(List<Integer> userList) {
+		for(Integer i : userList) {
+			int t = getTerminalForUser(i);
+			if (!TerminalID.contains(t))
+				TerminalID.add(t);
+			UserTerminalMap.put(i, t);
+		}
 	}
 	
 	
+	/*
+	 * Return the terminalID to which user is connected
+	 */
+	private int getTerminalForUser(Integer user) {
+		int terminalID = user;
+		//TODO do the database query here.
+		return terminalID%3;
+		
+	}
+
 	public int getSubscriptionID() {
 		return this.subscriptionID;
 	}
@@ -69,38 +191,22 @@ public class DataProcessingThread extends Thread {
 	/*
 	 * Append the list of users to the original message.
 	 */ 
-	public String appendUsersList (List <Integer> users) {
-		String newXMLData = null;
-		
-		// Currently inserting another node in the xml 
-		// Structure, after body.
-		int bodyEnd = this.xmlData.indexOf("</body>") + "</body>".length();
+	public String appendUsersList (Integer terminal) {
+		// TODO Remove this. This is bad.
+		int messageStart = this.parentXML.indexOf("<message>") + "<message>".length();
 		StringBuilder sb = new StringBuilder();
-		sb.append(this.xmlData.substring(0, bodyEnd));
-		sb.append("<users>");
-		for (Integer i : users)
-			sb.append(i + " ");
-		sb.append("</users>");
-		sb.append(this.xmlData.substring(bodyEnd, this.xmlData.length()));
-		newXMLData = sb.toString();
-		return newXMLData;
+		sb.append(this.parentXML.substring(0, messageStart));
+		sb.append(terminalReplyMap.get(terminal));
+		sb.append(this.parentXML.substring(messageStart, this.parentXML.length()));
+		return sb.toString();
 	}
 	
 	/*
 	 * Get the subscription ID from the xml structure.
 	 */
 	private int extractSubscriptionID() {
-		// Get the subscription ID from the xmlData String.
-		int subscriptionID = -1;
-		subscriptionID = Integer.parseInt(this.xmlData.substring(
-				this.xmlData.indexOf(SUBSCRIPTIONID_STRING) + SUBSCRIPTIONID_STRING.length(), 
-				this.xmlData.indexOf(SUBSCRIPTIONID_STRING_END)));
-
-		if (subscriptionID == -1) {
-			System.err.println("Defected xml stanza returned \n" + this.xmlData + "\n");
-			return -1;
-		}
-		return subscriptionID;
+		// Get the subscription ID.
+		return Integer.parseInt(this.subsID);
 	}
 	/*
 	 * This method is meant to do the database query corresponding to the 
@@ -109,11 +215,12 @@ public class DataProcessingThread extends Thread {
 	 */
 	private List<Integer> findUsersForTopic() {
 		List<Integer> Users = new Vector<Integer>();
-		System.out.println("Getting Users for " + this.subscriptionID + "\n");
-		// TODO 
-		// Do the database query here
-		Users.add(1);Users.add(2);Users.add(4);Users.add(8);Users.add(16);Users.add(32);
-		Users.add(64);Users.add(128);Users.add(256);Users.add(512);Users.add(1024);Users.add(2014);
+
+		// TODO Do the database query here
+		// and put the results in the Users vector.
+		Users.add(1);Users.add(2);
+		Users.add(4);Users.add(3);
+		Users.add(5);Users.add(6);
 		return Users;
 	}
 

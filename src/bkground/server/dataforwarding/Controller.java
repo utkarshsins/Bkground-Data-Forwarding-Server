@@ -67,12 +67,12 @@ public class Controller implements Runnable {
 
 	private void initiatePort(Scanner scanner, ServerInfo serverInfo)
 			throws IllegalStateException {
-		System.out.print("Enter port number to listen on (default "
+/*		System.out.print("Enter port number to listen on (default "
 				+ ServerInfo.SERVER_INFO_DEFAULT_PORT + ") : ");
 		String input = scanner.nextLine();
-
+*/
 		try {
-			serverInfo.setPort(Integer.parseInt(input));
+			serverInfo.setPort(Integer.parseInt("4041"));
 		} catch (NumberFormatException e) {
 		} catch (IllegalAccessException e) {
 			throw new IllegalStateException(e);
@@ -81,13 +81,13 @@ public class Controller implements Runnable {
 
 	private void initiateThreadCount(Scanner scanner, ServerInfo serverInfo)
 			throws IllegalStateException {
-		System.out
+/*		System.out
 				.println("Enter number of threads to handle connections (default "
 						+ Defaults.getDefaultListenerThreadCount() + ") : ");
 		String input = scanner.nextLine();
-
+*/
 		try {
-			serverInfo.setThreadCount(Integer.parseInt(input));
+			serverInfo.setThreadCount(Integer.parseInt("2"));
 		} catch (NumberFormatException e) {
 		} catch (IllegalAccessException e) {
 			throw new IllegalStateException(e);
