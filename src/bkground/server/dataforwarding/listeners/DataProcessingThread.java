@@ -9,7 +9,9 @@ import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 
 import bkground.server.dataforwarding.DataProcessTask.DataProcessTaskEntry;
+import bkground.server.dataforwarding.Defaults;
 import bkground.server.dataforwarding.ServerInfo;
+import bkground.server.dataforwarding.jdbc_connect;
 
 public class DataProcessingThread extends Thread {
 	
@@ -28,12 +30,21 @@ public class DataProcessingThread extends Thread {
 	List<Integer> TerminalID;
 	private int subscriptionID;
 	private ServerInfo serverInfo;
+	public jdbc_connect mysqlConnector;
 	public DataProcessingThread (Runnable arg0) {
 		super(arg0);
 		
 		terminalReplyMap = new ConcurrentHashMap<>();
 		UserTerminalMap = new ConcurrentHashMap<Integer, Integer>();
 		TerminalID = new Vector<Integer>();
+		
+		
+		// Get the database connector.
+		mysqlConnector = new jdbc_connect(Defaults.getDefaultDatabaseAddress(),
+					Defaults.getDefaultDatabaseName(),
+					Defaults.getDefaultDatabaseUsername(), 
+					Defaults.getDefaultDatabasePassword());
+
 	}
 	
 	public void setTask(DataProcessTaskEntry t) {
@@ -175,9 +186,11 @@ public class DataProcessingThread extends Thread {
 	 * Return the terminalID to which user is connected
 	 */
 	private int getTerminalForUser(Integer user) {
-		int terminalID = user;
-		//TODO do the database query here.
-		return terminalID%3;
+		int terminalID = -1;
+
+		terminalID = mysqlConnector.get_terminalID_for_userID(user);
+		
+		return terminalID;
 		
 	}
 
@@ -216,11 +229,9 @@ public class DataProcessingThread extends Thread {
 	private List<Integer> findUsersForTopic() {
 		List<Integer> Users = new Vector<Integer>();
 
-		// TODO Do the database query here
-		// and put the results in the Users vector.
-		Users.add(1);Users.add(2);
-		Users.add(4);Users.add(3);
-		Users.add(5);Users.add(6);
+		mysqlConnector.get_record_list_subscribers_db(Users, this.subscriptionID);
+		if (Users.isEmpty())
+			System.out.println("No user for this topic " + this.subscriptionID);
 		return Users;
 	}
 

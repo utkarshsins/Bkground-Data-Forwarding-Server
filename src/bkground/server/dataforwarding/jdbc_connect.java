@@ -169,7 +169,7 @@ public class jdbc_connect {
 	}
 
 	/* Returns a list with the userID entries mapped to a subscriptitonID */
-	void get_record_list_subscribers_db(List<Integer> Users, int subscriptionID) {
+	public void get_record_list_subscribers_db(List<Integer> Users, int subscriptionID) {
 		try {
 			stmt = (Statement) connection.createStatement();
 			String sql = "SELECT subscriptionID, userID FROM subscribers_db WHERE subscriptionID="
@@ -253,4 +253,28 @@ public class jdbc_connect {
 			se.printStackTrace();
 		}
 	}
+
+	/*/get terminalID for a given userID from terminalconnections database */
+	public int get_terminalID_for_userID(int userID) {
+		try {
+			stmt = (Statement) connection.createStatement();
+			int terminalID = -1;
+			String sql = "SELECT userID, terminalID FROM terminalconnections_db WHERE userID=" +
+					userID + ")";
+			ResultSet rs = stmt.executeQuery(sql);
+			int id = -1;
+			while(rs.next()) {
+				terminalID = rs.getInt("terminalID");
+				id = rs.getInt("userID");
+				System.out.println("Getting terminalID for " + userID + " id: " + id
+						+ "terminalID " + terminalID);
+			}
+			return terminalID;
+		} catch (SQLException se) {
+			// Handle errors for JDBC
+			se.printStackTrace();
+			return -1;
+		}
+	}
+
 }
